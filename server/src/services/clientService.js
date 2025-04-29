@@ -6,12 +6,16 @@ export const getClients = async () => {
 };
 
 export const createClient = async (clientData) => {
-  const { userid, username, password } = clientData;
+  const { user_email, password, tel, first_name, second_name, company_name } =
+    clientData;
   const { rows } = await query(
-    `INSERT INTO accounts (userid, username, password)
-            VALUES (1$, 2$, 3$) RETURNING *`,
-    [userid, username, password]
+    `INSERT INTO accounts ( user_email, password, tel, first_name, second_name, company_name)
+            VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [user_email, password, tel, first_name, second_name, company_name]
   );
 
   return rows[0];
 };
+
+/* Alterar colunas do back-end para as colunas corretas que estão no
+banco de dados*/

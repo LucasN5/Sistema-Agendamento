@@ -2,7 +2,7 @@ import * as clientService from "../services/clientService.js";
 
 export const getClients = async (req, res) => {
   try {
-    const client = await clientService.getClients();
+    const clients = await clientService.getClients();
     res.status(200).json(clients);
   } catch (err) {
     console.error("Error fetching clients:", err);

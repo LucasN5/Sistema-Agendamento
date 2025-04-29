@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   AtSignIcon,
   BuildingIcon,
@@ -29,32 +30,39 @@ export default function ClientRegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [first_name, setFirst_name] = useState("");
+  const [second_name, setSecond_name] = useState("");
+  const [tel, setTel] = useState("");
+  const [user_email, setUser_email] = useState("");
+  const [password, setPassword] = useState("");
+  const [company_name, setCompany_name] = useState("");
 
   const validateForm = (formData) => {
     const newErrors = {};
 
     // Get form values
-    const firstName = formData.get("firstName");
-    const lastName = formData.get("lastName");
-    const email = formData.get("email");
+    const first_name = formData.get("firstName");
+    const second_name = formData.get("lastName");
+    const user_email = formData.get("email");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
-    const phone = formData.get("phone");
+    const tel = formData.get("phone");
+    const company_name = formData.get("company");
 
     // Validate first name
-    if (!firstName || firstName.trim() === "") {
-      newErrors.firstName = "First name is required";
+    if (!first_name || first_name.trim() === "") {
+      newErrors.first_name = "First name is required";
     }
 
     // Validate last name
-    if (!lastName || lastName.trim() === "") {
-      newErrors.lastName = "Last name is required";
+    if (!second_name || second_name.trim() === "") {
+      newErrors.second_name = "Last name is required";
     }
 
     // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-      newErrors.email = "Valid email is required";
+    if (!user_email || !emailRegex.test(user_email)) {
+      newErrors.user_email = "Valid email is required";
     }
 
     // Validate password
@@ -68,33 +76,53 @@ export default function ClientRegistrationForm() {
     }
 
     // Validate phone
-    if (!phone || phone.trim() === "") {
-      newErrors.phone = "Phone number is required";
+    if (!tel || tel.trim() === "") {
+      newErrors.tel = "Phone number is required";
+    }
+
+    if (!company_name || company_name.trim() === "") {
+      newErrors.company_name = "company name is required";
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  //Revisar como funciona o handleSubmit do projeto antigo
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(e.currentTarget);
     const isValid = validateForm(formData);
 
-    if (isValid) {
-      // Simulate API call to create account
-      setTimeout(() => {
-        setIsLoading(false);
-        setSuccess(true);
+    if (!isValid) {
+      setIsLoading(false);
+      return;
+    }
 
-        // Redirect to login page after showing success message
-        setTimeout(() => {
-          navigate("/");
-        }, 3000);
-      }, 1500);
-    } else {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_REACT_APP_BACKEND_BASEURL}/api/account`,
+        {
+          user_email,
+          password,
+          tel,
+          first_name,
+          second_name,
+          company_name,
+        }
+      );
+      console.log("Client added:", response.data);
+
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
+    } catch (error) {
+      console.error("Error adding client:", error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -104,10 +132,10 @@ export default function ClientRegistrationForm() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center text-green-600">
-            Registration Successful!
+            Registro Sucedido!
           </CardTitle>
           <CardDescription className="text-center">
-            Your account has been created successfully
+            Sua conta foi criada com sucesso
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-8">
@@ -115,8 +143,7 @@ export default function ClientRegistrationForm() {
             <CheckIcon className="h-8 w-8 text-green-600" />
           </div>
           <p className="text-center mb-4">
-            Thank you for registering. You will be redirected to the login page
-            shortly.
+            Obrigado pelo seu registro. Você será redirecionado logo mais.
           </p>
           <Button
             variant="outline"
@@ -124,7 +151,7 @@ export default function ClientRegistrationForm() {
             className="mt-2"
           >
             <ChevronLeftIcon className="mr-2 h-4 w-4" />
-            Go to Login
+            Ir para login
           </Button>
         </CardContent>
       </Card>
@@ -135,23 +162,25 @@ export default function ClientRegistrationForm() {
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold text-center">
-          Create Client Account
+          Criar Conta Cliente
         </CardTitle>
         <CardDescription className="text-center">
-          Enter your information to register a new client account
+          Adicione suas informações ao registro para criar uma conta
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="firstName">Nome</Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="firstName"
                   name="firstName"
-                  placeholder="John"
+                  placeholder="Luiz"
+                  value={first_name}
+                  onChange={(e) => setFirst_name(e.target.value)}
                   className={`pl-10 ${
                     errors.firstName ? "border-red-500" : ""
                   }`}
@@ -162,13 +191,15 @@ export default function ClientRegistrationForm() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">Last Name</Label>
+              <Label htmlFor="lastName">Sobrenome</Label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="lastName"
                   name="lastName"
-                  placeholder="Doe"
+                  placeholder="Machado"
+                  value={second_name}
+                  onChange={(e) => setSecond_name(e.target.value)}
                   className={`pl-10 ${errors.lastName ? "border-red-500" : ""}`}
                 />
               </div>
@@ -186,7 +217,9 @@ export default function ClientRegistrationForm() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="john.doe@example.com"
+                placeholder="seuemail@exemplo.com"
+                value={user_email}
+                onChange={(e) => setUser_email(e.target.value)}
                 className={`pl-10 ${errors.email ? "border-red-500" : ""}`}
               />
             </div>
@@ -196,14 +229,16 @@ export default function ClientRegistrationForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Número de Telefone</Label>
             <div className="relative">
               <PhoneIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="phone"
                 name="phone"
                 type="tel"
-                placeholder="+1 (555) 123-4567"
+                placeholder="(13) 00000-0000"
+                value={tel}
+                onChange={(e) => setTel(e.target.value)}
                 className={`pl-10 ${errors.phone ? "border-red-500" : ""}`}
               />
             </div>
@@ -213,26 +248,31 @@ export default function ClientRegistrationForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company">Company Name (Optional)</Label>
+            <Label htmlFor="company">Nome da Empresa (Opcional)</Label>
             <div className="relative">
               <BuildingIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="company"
                 name="company"
-                placeholder="Acme Inc."
+                placeholder="Exemplo inc."
+                value={company_name}
+                onChange={(e) => setCompany_name(e.target.value)}
                 className="pl-10"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Senha</Label>
             <div className="relative">
               <LockIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
                 name="password"
                 type="password"
+                placeholder="Sua Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
               />
             </div>
@@ -240,19 +280,20 @@ export default function ClientRegistrationForm() {
               <p className="text-xs text-red-500">{errors.password}</p>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Password must be at least 8 characters
+                A senha deve possuir ao menos 8 caracteres
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirmar Senha</Label>
             <div className="relative">
               <LockIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
+                placeholder="Sua senha"
                 className={`pl-10 ${
                   errors.confirmPassword ? "border-red-500" : ""
                 }`}
@@ -262,34 +303,15 @@ export default function ClientRegistrationForm() {
               <p className="text-xs text-red-500">{errors.confirmPassword}</p>
             )}
           </div>
-
-          <div className="flex items-start space-x-2">
-            <Checkbox
-              id="terms"
-              name="terms"
-              className={errors.terms ? "border-red-500" : ""}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <label
-                htmlFor="terms"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                I agree to the Terms and Conditions
-              </label>
-              {errors.terms && (
-                <p className="text-xs text-red-500">{errors.terms}</p>
-              )}
-            </div>
-          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating Account..." : "Create Account"}
+            {isLoading ? "Criando Conta..." : "Criar Conta"}
           </Button>
           <div className="text-center text-sm">
-            Already have an account?{" "}
-            <Link to="/" className="text-primary hover:underline">
-              Log in
+            Já possui uma conta?{" "}
+            <Link to="/" className="text-primary font-medium hover:underline">
+              Acessar login
             </Link>
           </div>
         </CardFooter>
